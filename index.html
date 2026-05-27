@@ -1,245 +1,610 @@
 <!DOCTYPE html>
 <html lang="pt-BR">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>YouTube Downloader</title>
-    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/tabler-icons@latest/tabler-icons.min.css">
-    <style>
-        * { margin: 0; padding: 0; box-sizing: border-box; }
-        body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 650px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
-        .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { font-size: 28px; margin-bottom: 10px; }
-        .content { padding: 40px 30px; }
-        .form-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 10px; font-weight: 600; color: #333; font-size: 14px; }
-        input[type="url"] { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
-        input[type="url"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        
-        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
-        .option-box { padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
-        .option-box input { display: none; }
-        .option-box:hover { border-color: #667eea; background: #f9f9f9; }
-        .option-box input:checked + label { color: #667eea; font-weight: 600; }
-        .option-box input:checked ~ .box-content { border-color: #667eea; background: rgba(102,126,234,0.05); }
-        .box-content { padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; }
-        
-        .quality-selector { display: none; }
-        .quality-selector.show { display: block; }
-        .quality-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
-        .quality-option { padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.3s; }
-        .quality-option:hover { border-color: #667eea; }
-        .quality-option input { display: none; }
-        .quality-option input:checked ~ .quality-label { color: #667eea; font-weight: 600; }
-        
-        .button-group { display: flex; gap: 10px; margin-top: 25px; }
-        button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.3s; }
-        .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover:not(:disabled) { background: #5568d3; transform: translateY(-2px); }
-        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
-        .btn-download { background: #4CAF50; color: white; font-size: 16px; }
-        .btn-download:hover { background: #45a049; }
-        
-        .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
-        .message.show { display: block; }
-        .message.success { background: #efe; color: #3c3; border-left: 4px solid #3c3; }
-        .message.error { background: #fee; color: #c33; border-left: 4px solid #c33; }
-        
-        .video-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none; }
-        .video-info.show { display: block; }
-        .video-info-item { margin: 8px 0; font-size: 14px; }
-        
-        .download-link { margin-top: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border: 2px solid #667eea; display: none; }
-        .download-link.show { display: block; }
-        .download-link .btn-download { display: block; width: 100%; }
-        
-        .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 0.8s infinite; }
-        @keyframes spin { to { transform: rotate(360deg); } }
-        
-        .footer { border-top: 1px solid #e0e0e0; padding: 15px 30px; background: #fafafa; font-size: 12px; color: #999; text-align: center; }
-    </style>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>YouTube Downloader | Protótipo</title>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              50: "#fff1f1",
+              100: "#ffdcdc",
+              200: "#ffb3b3",
+              300: "#ff8888",
+              400: "#ff5f5f",
+              500: "#ff2d2d",
+              600: "#e51d1d",
+              700: "#bb1515",
+              800: "#7e1010",
+              900: "#520b0b"
+            }
+          },
+          boxShadow: {
+            glow: "0 0 0 1px rgba(255,45,45,.25), 0 18px 70px rgba(0,0,0,.6)"
+          }
+        }
+      }
+    };
+  </script>
+  <style>
+    :root {
+      color-scheme: dark;
+    }
+    body {
+      background:
+        radial-gradient(circle at top, rgba(255, 45, 45, 0.22), transparent 30%),
+        radial-gradient(circle at 20% 20%, rgba(255, 255, 255, 0.04), transparent 22%),
+        linear-gradient(180deg, #0b0b0f 0%, #0f1117 40%, #090a0d 100%);
+    }
+    .glass {
+      background: linear-gradient(180deg, rgba(18, 18, 24, 0.92), rgba(10, 10, 14, 0.86));
+      backdrop-filter: blur(16px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+    }
+    .tab-active {
+      background: linear-gradient(135deg, rgba(255, 45, 45, 0.96), rgba(184, 21, 21, 0.96));
+      box-shadow: 0 12px 24px rgba(255, 45, 45, 0.25);
+    }
+    .fade-in {
+      animation: fadeIn 420ms ease-out both;
+    }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(10px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .pulse-red {
+      animation: pulseRed 1.8s ease-in-out infinite;
+    }
+    @keyframes pulseRed {
+      0%, 100% { box-shadow: 0 0 0 0 rgba(255, 45, 45, 0.0); }
+      50% { box-shadow: 0 0 0 10px rgba(255, 45, 45, 0.08); }
+    }
+  </style>
 </head>
-<body>
-    <div class="container">
-        <div class="header">
-            <h1>🎬 YouTube Downloader</h1>
-            <p>Baixe vídeos do YouTube em alta qualidade</p>
-        </div>
-        <div class="content">
-            <div class="message error" id="messageError"></div>
-            <div class="message success" id="messageSuccess"></div>
-            
-            <div class="form-group">
-                <label>URL do YouTube</label>
-                <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." required>
-            </div>
+<body class="min-h-screen text-slate-100">
+  <main class="mx-auto flex min-h-screen w-full max-w-7xl items-center px-4 py-8 sm:px-6 lg:px-8">
+    <section class="glass shadow-glow relative w-full overflow-hidden rounded-3xl">
+      <div class="absolute inset-0 pointer-events-none">
+        <div class="absolute -top-28 left-[-5%] h-72 w-72 rounded-full bg-brand-500/20 blur-3xl"></div>
+        <div class="absolute right-[-10%] top-16 h-80 w-80 rounded-full bg-white/5 blur-3xl"></div>
+        <div class="absolute bottom-[-10%] left-1/3 h-72 w-72 rounded-full bg-brand-900/25 blur-3xl"></div>
+      </div>
 
-            <div class="video-info" id="videoInfo">
-                <div class="video-info-item"><strong id="videoTitle">-</strong></div>
-                <div class="video-info-item" id="videoAuthor">👤 -</div>
+      <div class="relative grid gap-0 lg:grid-cols-[1.08fr_0.92fr]">
+        <div class="border-b border-white/8 px-6 py-8 sm:px-10 lg:border-b-0 lg:border-r">
+          <div class="mb-8 flex items-center gap-3">
+            <div class="flex h-12 w-12 items-center justify-center rounded-2xl bg-brand-500/15 ring-1 ring-brand-500/30">
+              <svg viewBox="0 0 24 24" class="h-6 w-6 text-brand-400" fill="currentColor" aria-hidden="true">
+                <path d="M10 15l5.19-3L10 9v6zm11-3c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v3z"/>
+              </svg>
             </div>
+            <div>
+              <p class="text-xs font-semibold uppercase tracking-[0.35em] text-slate-400">YouTube Downloader</p>
+              <h1 class="mt-1 text-2xl font-semibold text-white sm:text-3xl">Protótipo moderno de download</h1>
+            </div>
+          </div>
 
-            <div class="form-group">
-                <label>Tipo de Mídia</label>
-                <div class="options-grid">
-                    <div class="option-box">
-                        <input type="radio" id="format-video" name="format" value="video" checked>
-                        <label for="format-video">📹 Vídeo (MP4)</label>
-                        <div class="box-content">Alta qualidade</div>
-                    </div>
-                    <div class="option-box">
-                        <input type="radio" id="format-audio" name="format" value="audio">
-                        <label for="format-audio">🎵 Áudio (MP3)</label>
-                        <div class="box-content">Só o som</div>
-                    </div>
+          <p class="max-w-xl text-sm leading-6 text-slate-300 sm:text-base">
+            Cole um link do YouTube, analise o vídeo e escolha entre vídeo ou áudio com uma experiência visual fluida,
+            responsiva e com feedback claro de progresso.
+          </p>
+
+          <div class="mt-8 rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-6">
+            <label for="videoUrl" class="mb-3 block text-sm font-medium text-slate-300">URL do vídeo</label>
+            <div class="flex flex-col gap-3 sm:flex-row">
+              <div class="relative flex-1">
+                <span class="pointer-events-none absolute inset-y-0 left-4 flex items-center text-slate-500">🔗</span>
+                <input
+                  id="videoUrl"
+                  type="url"
+                  inputmode="url"
+                  placeholder="https://www.youtube.com/watch?v=..."
+                  class="w-full rounded-2xl border border-white/10 bg-slate-950/80 py-4 pl-12 pr-4 text-sm text-white outline-none transition placeholder:text-slate-500 focus:border-brand-500/60 focus:ring-4 focus:ring-brand-500/10"
+                />
+              </div>
+              <button
+                id="analyzeBtn"
+                class="pulse-red inline-flex items-center justify-center rounded-2xl bg-brand-500 px-6 py-4 text-sm font-semibold text-white transition hover:bg-brand-400 disabled:cursor-not-allowed disabled:opacity-60"
+              >
+                Analisar Vídeo
+              </button>
+            </div>
+            <p class="mt-3 text-xs text-slate-500">
+              Dica: este front-end simula análise e download para funcionar como um protótipo funcional.
+            </p>
+          </div>
+
+          <div id="statusCard" class="fade-in mt-6 hidden rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5">
+            <div class="flex flex-col gap-4 sm:flex-row">
+              <img
+                id="thumb"
+                alt="Miniatura do vídeo"
+                class="h-40 w-full rounded-2xl object-cover sm:h-32 sm:w-56"
+                src="https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=80"
+              />
+              <div class="flex min-w-0 flex-1 flex-col justify-between">
+                <div>
+                  <div class="mb-2 inline-flex items-center gap-2 rounded-full border border-brand-500/30 bg-brand-500/10 px-3 py-1 text-xs font-medium text-brand-200">
+                    <span class="h-2 w-2 rounded-full bg-brand-400"></span>
+                    Vídeo analisado
+                  </div>
+                  <h2 id="title" class="line-clamp-2 text-lg font-semibold text-white sm:text-xl">-</h2>
+                  <div class="mt-3 flex flex-wrap gap-3 text-sm text-slate-300">
+                    <span id="duration" class="rounded-full bg-white/5 px-3 py-1">Duração: --</span>
+                    <span id="channel" class="rounded-full bg-white/5 px-3 py-1">Canal: --</span>
+                  </div>
                 </div>
+              </div>
+            </div>
+          </div>
+
+          <div id="analysisLoader" class="mt-6 hidden rounded-3xl border border-white/8 bg-black/20 p-4 sm:p-5">
+            <div class="flex items-center gap-3">
+              <div class="h-10 w-10 animate-spin rounded-full border-2 border-white/15 border-t-brand-500"></div>
+              <div>
+                <p class="text-sm font-medium text-white">Analisando o vídeo...</p>
+                <p class="text-xs text-slate-400">Buscando miniatura, título e duração.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div class="px-6 py-8 sm:px-10">
+          <div id="optionsSection" class="hidden fade-in">
+            <div class="mb-5 flex items-center justify-between">
+              <div>
+                <p class="text-xs font-semibold uppercase tracking-[0.3em] text-slate-500">Opções</p>
+                <h2 class="mt-1 text-2xl font-semibold text-white">Escolha o formato</h2>
+              </div>
+              <div class="rounded-full border border-white/8 bg-white/5 px-3 py-1 text-xs text-slate-400">
+                Simulação local
+              </div>
             </div>
 
-            <div class="form-group quality-selector" id="qualityGroup">
-                <label>Qualidade do Vídeo</label>
-                <div class="quality-options">
-                    <div class="quality-option">
-                        <input type="radio" id="quality-best" name="quality" value="best" checked>
-                        <div class="quality-label">🌟 Melhor</div>
-                    </div>
-                    <div class="quality-option">
-                        <input type="radio" id="quality-720" name="quality" value="720">
-                        <div class="quality-label">🎥 720p HD</div>
-                    </div>
-                    <div class="quality-option">
-                        <input type="radio" id="quality-480" name="quality" value="480">
-                        <div class="quality-label">📺 480p SD</div>
-                    </div>
+            <div class="mb-5 grid grid-cols-2 gap-3">
+              <button id="tabVideo" class="tab-active rounded-2xl px-4 py-3 text-sm font-semibold text-white transition">
+                Vídeo
+              </button>
+              <button id="tabAudio" class="rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/8">
+                Áudio
+              </button>
+            </div>
+
+            <div id="videoPanel" class="space-y-3">
+              <article class="rounded-3xl border border-white/8 bg-black/20 p-4 transition hover:border-brand-500/30">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-white">1080p</h3>
+                    <p class="text-sm text-slate-400">Arquivo estimado: 112 MB</p>
+                  </div>
+                  <button data-download-type="Video 1080p" data-size="112 MB" class="download-btn rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                    Download
+                  </button>
                 </div>
+              </article>
+
+              <article class="rounded-3xl border border-white/8 bg-black/20 p-4 transition hover:border-brand-500/30">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-white">720p</h3>
+                    <p class="text-sm text-slate-400">Arquivo estimado: 68 MB</p>
+                  </div>
+                  <button data-download-type="Video 720p" data-size="68 MB" class="download-btn rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                    Download
+                  </button>
+                </div>
+              </article>
+
+              <article class="rounded-3xl border border-white/8 bg-black/20 p-4 transition hover:border-brand-500/30">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-white">480p</h3>
+                    <p class="text-sm text-slate-400">Arquivo estimado: 34 MB</p>
+                  </div>
+                  <button data-download-type="Video 480p" data-size="34 MB" class="download-btn rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                    Download
+                  </button>
+                </div>
+              </article>
             </div>
 
-            <div class="button-group">
-                <button id="downloadBtn" class="btn-primary">Baixar</button>
+            <div id="audioPanel" class="hidden space-y-3">
+              <article class="rounded-3xl border border-white/8 bg-black/20 p-4 transition hover:border-brand-500/30">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-white">MP3 320 kbps</h3>
+                    <p class="text-sm text-slate-400">Arquivo estimado: 12 MB</p>
+                  </div>
+                  <button data-download-type="Áudio MP3 320kbps" data-size="12 MB" class="download-btn rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                    Download
+                  </button>
+                </div>
+              </article>
+
+              <article class="rounded-3xl border border-white/8 bg-black/20 p-4 transition hover:border-brand-500/30">
+                <div class="flex items-center justify-between gap-3">
+                  <div>
+                    <h3 class="font-semibold text-white">M4A</h3>
+                    <p class="text-sm text-slate-400">Arquivo estimado: 8 MB</p>
+                  </div>
+                  <button data-download-type="Áudio M4A" data-size="8 MB" class="download-btn rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                    Download
+                  </button>
+                </div>
+              </article>
             </div>
 
-            <div class="download-link" id="downloadLinkDiv">
-                <p style="margin-bottom: 15px;">✓ Link de download gerado!</p>
-                <button class="btn-download" id="downloadBtn2">📥 CLIQUE AQUI PARA BAIXAR</button>
+            <div id="downloadCard" class="hidden mt-6 rounded-3xl border border-brand-500/30 bg-brand-500/10 p-4 sm:p-5">
+              <div class="flex items-center justify-between gap-3">
+                <div>
+                  <p id="downloadLabel" class="text-sm font-semibold text-white">Baixando...</p>
+                  <p id="downloadMeta" class="text-xs text-slate-300">Velocidade e ETA serão calculados automaticamente.</p>
+                </div>
+                <div id="downloadPercent" class="text-right text-lg font-bold text-brand-200">0%</div>
+              </div>
+
+              <div class="mt-4 h-3 overflow-hidden rounded-full bg-white/10">
+                <div id="progressBar" class="h-full w-0 rounded-full bg-gradient-to-r from-brand-500 via-brand-400 to-white transition-[width] duration-300"></div>
+              </div>
+
+              <div class="mt-4 grid gap-3 sm:grid-cols-3">
+                <div class="rounded-2xl bg-black/20 p-3">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Progresso</p>
+                  <p id="progressText" class="mt-1 text-sm font-semibold text-white">Baixando: 0%</p>
+                </div>
+                <div class="rounded-2xl bg-black/20 p-3">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500">Velocidade</p>
+                  <p id="speedText" class="mt-1 text-sm font-semibold text-white">-- MB/s</p>
+                </div>
+                <div class="rounded-2xl bg-black/20 p-3">
+                  <p class="text-xs uppercase tracking-[0.2em] text-slate-500">ETA</p>
+                  <p id="etaText" class="mt-1 text-sm font-semibold text-white">--</p>
+                </div>
+              </div>
             </div>
+
+            <div id="successCard" class="hidden mt-6 rounded-3xl border border-emerald-500/30 bg-emerald-500/10 p-5">
+              <p class="text-sm font-semibold text-emerald-200">Download concluído!</p>
+              <p class="mt-1 text-sm text-slate-300">Você pode converter outro vídeo quando quiser.</p>
+              <button
+                type="button"
+                data-open-download="true"
+                class="mt-4 rounded-2xl bg-brand-500 px-4 py-3 text-sm font-semibold text-white transition hover:bg-brand-400"
+              >
+                Abrir arquivo
+              </button>
+              <button id="resetBtn" class="mt-4 rounded-2xl bg-white px-4 py-3 text-sm font-semibold text-slate-950 transition hover:bg-slate-100">
+                Converter outro vídeo
+              </button>
+            </div>
+          </div>
+
+          <div id="emptyState" class="flex h-full min-h-[420px] items-center justify-center rounded-3xl border border-dashed border-white/10 bg-black/10 px-6 text-center">
+            <div class="max-w-sm">
+              <div class="mx-auto mb-4 flex h-14 w-14 items-center justify-center rounded-2xl bg-brand-500/10 ring-1 ring-brand-500/20">
+                <svg viewBox="0 0 24 24" class="h-7 w-7 text-brand-400" fill="currentColor" aria-hidden="true">
+                  <path d="M10 15l5.19-3L10 9v6zm11-3c0 1.1-.9 2-2 2H5c-1.1 0-2-.9-2-2V9c0-1.1.9-2 2-2h14c1.1 0 2 .9 2 2v3z"/>
+                </svg>
+              </div>
+              <h2 class="text-xl font-semibold text-white">Pronto para analisar</h2>
+              <p class="mt-2 text-sm leading-6 text-slate-400">
+                Depois de colar a URL e clicar em analisar, as opções de vídeo e áudio aparecerão aqui.
+              </p>
+            </div>
+          </div>
         </div>
-        <div class="footer">
-            <p>⚠️ Respeite os direitos autorais</p>
-        </div>
-    </div>
+      </div>
+    </section>
+  </main>
 
-    <script>
-        const SERVER = 'https://youtube-4vor.onrender.com';
-        const urlInput = document.getElementById('urlInput');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const downloadBtn2 = document.getElementById('downloadBtn2');
-        const videoInfo = document.getElementById('videoInfo');
-        const downloadLinkDiv = document.getElementById('downloadLinkDiv');
-        const messageError = document.getElementById('messageError');
-        const messageSuccess = document.getElementById('messageSuccess');
-        const qualityGroup = document.getElementById('qualityGroup');
-        const formatInputs = document.querySelectorAll('input[name="format"]');
+  <script>
+    // Elementos da interface
+    const videoUrlInput = document.getElementById("videoUrl");
+    const analyzeBtn = document.getElementById("analyzeBtn");
+    const statusCard = document.getElementById("statusCard");
+    const analysisLoader = document.getElementById("analysisLoader");
+    const optionsSection = document.getElementById("optionsSection");
+    const emptyState = document.getElementById("emptyState");
+    const thumb = document.getElementById("thumb");
+    const title = document.getElementById("title");
+    const duration = document.getElementById("duration");
+    const channel = document.getElementById("channel");
+    const tabVideo = document.getElementById("tabVideo");
+    const tabAudio = document.getElementById("tabAudio");
+    const videoPanel = document.getElementById("videoPanel");
+    const audioPanel = document.getElementById("audioPanel");
+    const downloadCard = document.getElementById("downloadCard");
+    const downloadLabel = document.getElementById("downloadLabel");
+    const downloadMeta = document.getElementById("downloadMeta");
+    const downloadPercent = document.getElementById("downloadPercent");
+    const progressBar = document.getElementById("progressBar");
+    const progressText = document.getElementById("progressText");
+    const speedText = document.getElementById("speedText");
+    const etaText = document.getElementById("etaText");
+    const successCard = document.getElementById("successCard");
+    const resetBtn = document.getElementById("resetBtn");
+    const downloadButtons = document.querySelectorAll(".download-btn");
 
-        let currentDownloadUrl = null;
+    let currentAnalysisTimer = null;
+    let currentDownloadTimer = null;
+    let currentVideo = null;
+    let currentTab = "video";
+    let isAnalyzing = false;
+    let isDownloading = false;
+    let currentDownloadUrl = null;
+    let currentFormat = "video";
+    let currentQuality = "best";
 
-        // Mostrar/esconder opções de qualidade
-        formatInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                if (this.value === 'video') {
-                    qualityGroup.classList.add('show');
-                } else {
-                    qualityGroup.classList.remove('show');
-                }
-            });
+    // Gera um ID estável a partir da URL, para simular miniatura e metadados.
+    function getVideoId(url) {
+      try {
+        const parsed = new URL(url);
+        if (parsed.hostname.includes("youtu.be")) {
+          return parsed.pathname.replace("/", "").trim() || "demo123";
+        }
+        return parsed.searchParams.get("v") || parsed.pathname.split("/").filter(Boolean).pop() || "demo123";
+      } catch {
+        return "demo123";
+      }
+    }
+
+    // Mascara o título para parecer um retorno de API sem depender de backend.
+    function buildFakeVideo(url) {
+      const id = getVideoId(url);
+      const titles = [
+        "Como criar interfaces modernas com JavaScript",
+        "Design Dark Mode com foco em conversão",
+        "Protótipo funcional de download em front-end",
+        "Guia prático de UX para páginas responsivas"
+      ];
+      const durations = ["12:48", "08:22", "15:09", "06:37"];
+      const channels = ["Code Studio", "UX Lab", "Front End Pro", "Design Motion"];
+      const pick = (arr) => arr[Math.abs(id.split("").reduce((acc, ch) => acc + ch.charCodeAt(0), 0)) % arr.length];
+
+      return {
+        id,
+        title: pick(titles),
+        duration: pick(durations),
+        channel: pick(channels),
+        thumbnail: `https://img.youtube.com/vi/${id}/hqdefault.jpg`
+      };
+    }
+
+    function formatBytesFromLabel(label) {
+      const match = /(\d+)\s*MB/i.exec(label);
+      return match ? Number(match[1]) : 24;
+    }
+
+    // Atualiza o estado visual das abas.
+    function setTab(tab) {
+      currentTab = tab;
+      const videoActive = tab === "video";
+
+      tabVideo.className = videoActive
+        ? "tab-active rounded-2xl px-4 py-3 text-sm font-semibold text-white transition"
+        : "rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/8";
+
+      tabAudio.className = !videoActive
+        ? "tab-active rounded-2xl px-4 py-3 text-sm font-semibold text-white transition"
+        : "rounded-2xl border border-white/10 bg-white/5 px-4 py-3 text-sm font-semibold text-slate-300 transition hover:bg-white/8";
+
+      videoPanel.classList.toggle("hidden", !videoActive);
+      audioPanel.classList.toggle("hidden", videoActive);
+    }
+
+    // Limpa a simulação de download caso o usuário inicie outro fluxo.
+    function clearDownloadSimulation() {
+      if (currentDownloadTimer) {
+        clearInterval(currentDownloadTimer);
+        currentDownloadTimer = null;
+      }
+      isDownloading = false;
+      currentDownloadUrl = null;
+      downloadCard.classList.add("hidden");
+      successCard.classList.add("hidden");
+      progressBar.style.width = "0%";
+      downloadPercent.textContent = "0%";
+      progressText.textContent = "Baixando: 0%";
+      speedText.textContent = "-- MB/s";
+      etaText.textContent = "--";
+    }
+
+    // Consulta a API real para obter metadados do vídeo.
+    async function analyzeVideo() {
+      const url = videoUrlInput.value.trim();
+      if (!url) {
+        alert("Cole uma URL do YouTube para continuar.");
+        return;
+      }
+
+      if (!/youtu\.be|youtube\.com/i.test(url)) {
+        alert("Use uma URL válida do YouTube para a simulação.");
+        return;
+      }
+
+      if (isAnalyzing) return;
+
+      isAnalyzing = true;
+      analyzeBtn.disabled = true;
+      analyzeBtn.textContent = "Analisando...";
+      analysisLoader.classList.remove("hidden");
+      statusCard.classList.add("hidden");
+      optionsSection.classList.add("hidden");
+      emptyState.classList.add("hidden");
+      clearDownloadSimulation();
+
+      if (currentAnalysisTimer) {
+        clearTimeout(currentAnalysisTimer);
+      }
+
+      currentAnalysisTimer = setTimeout(async () => {
+        try {
+          const response = await fetch("/api/video-info", {
+            method: "POST",
+            headers: { "Content-Type": "application/json" },
+            body: JSON.stringify({ url })
+          });
+
+          const data = await response.json();
+          if (!response.ok || !data.success) {
+            throw new Error(data.error || data.message || "Falha ao obter informações do vídeo.");
+          }
+
+          currentVideo = {
+            id: getVideoId(url),
+            title: data.title,
+            duration: data.duration || "Desconhecida",
+            channel: data.author || "Desconhecido",
+            thumbnail: `https://img.youtube.com/vi/${getVideoId(url)}/hqdefault.jpg`
+          };
+
+          thumb.src = currentVideo.thumbnail;
+          thumb.onerror = () => {
+            thumb.src = "https://images.unsplash.com/photo-1511671782779-c97d3d27a1d4?auto=format&fit=crop&w=900&q=80";
+          };
+          title.textContent = currentVideo.title;
+          duration.textContent = `Duração: ${currentVideo.duration}`;
+          channel.textContent = `Canal: ${currentVideo.channel}`;
+
+          analysisLoader.classList.add("hidden");
+          statusCard.classList.remove("hidden");
+          optionsSection.classList.remove("hidden");
+          setTab("video");
+        } catch (error) {
+          alert(error.message);
+          analysisLoader.classList.add("hidden");
+        } finally {
+          isAnalyzing = false;
+          analyzeBtn.disabled = false;
+          analyzeBtn.textContent = "Analisar Vídeo";
+        }
+      }, 900);
+    }
+
+    // Aciona o backend real de download e mantém a barra fluida até a resposta.
+    async function startFakeDownload(label, size) {
+      if (isDownloading) return;
+      clearDownloadSimulation();
+      isDownloading = true;
+      currentFormat = label.toLowerCase().includes("áudio") ? "audio" : "video";
+      currentQuality = label.includes("1080") ? "1080" : label.includes("720") ? "720" : label.includes("480") ? "480" : label.includes("320") ? "best" : "best";
+
+      successCard.classList.add("hidden");
+      downloadCard.classList.remove("hidden");
+      downloadLabel.textContent = `Baixando: ${label}`;
+      downloadMeta.textContent = `Tamanho estimado: ${size}`;
+
+      let progress = 0;
+      const sizeMb = formatBytesFromLabel(size);
+      let speed = 4.2 + Math.random() * 2.8;
+      let etaSeconds = Math.max(4, Math.ceil(sizeMb / speed));
+
+      downloadPercent.textContent = "0%";
+      progressText.textContent = "Baixando: 0%";
+      speedText.textContent = `${speed.toFixed(1)} MB/s`;
+      etaText.textContent = `${etaSeconds}s`;
+
+      currentDownloadTimer = setInterval(() => {
+        const step = progress < 85 ? Math.max(1.2, Math.min(4.8, 1.6 + Math.random() * 3.8)) : Math.max(0.4, Math.min(1.8, 0.5 + Math.random() * 1.3));
+        progress = Math.min(96, progress + step);
+        speed = Math.max(2.4, Math.min(9.6, speed + (Math.random() - 0.5) * 1.2));
+        etaSeconds = Math.max(1, Math.ceil(((100 - progress) / 100) * Math.max(sizeMb / Math.max(speed, 1), 1)));
+
+        downloadPercent.textContent = `${Math.round(progress)}%`;
+        progressText.textContent = `Baixando: ${Math.round(progress)}%`;
+        speedText.textContent = `${speed.toFixed(1)} MB/s`;
+        etaText.textContent = etaSeconds > 0 ? `${etaSeconds}s` : "Finalizando...";
+        progressBar.style.width = `${progress}%`;
+      }, 220);
+
+      try {
+        const response = await fetch("/api/download", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({
+            url: videoUrlInput.value.trim(),
+            format: currentFormat,
+            quality: currentQuality
+          })
         });
 
-        downloadBtn.addEventListener('click', async () => {
-            const videoUrl = urlInput.value.trim();
-            
-            if (!videoUrl) {
-                showError('Cole uma URL válida');
-                return;
-            }
-
-            downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<div class="loading"></div> Processando...';
-            messageError.classList.remove('show');
-            messageSuccess.classList.remove('show');
-            downloadLinkDiv.classList.remove('show');
-
-            try {
-                const format = document.querySelector('input[name="format"]:checked').value;
-                const quality = document.querySelector('input[name="quality"]:checked').value;
-
-                console.log('[CLIENT] Enviando:', { url: videoUrl, format, quality });
-
-                // Obter informações
-                const infoRes = await fetch(`${SERVER}/api/video-info`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: videoUrl })
-                });
-
-                const infoData = await infoRes.json();
-                console.log('[CLIENT] Info recebida:', infoData);
-
-                if (infoData.success) {
-                    document.getElementById('videoTitle').textContent = infoData.title;
-                    document.getElementById('videoAuthor').textContent = `👤 ${infoData.author}`;
-                    videoInfo.classList.add('show');
-                }
-
-                // Obter link de download
-                const downloadRes = await fetch(`${SERVER}/api/download`, {
-                    method: 'POST',
-                    headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: videoUrl, format, quality })
-                });
-
-                const downloadData = await downloadRes.json();
-                console.log('[CLIENT] Download recebido:', downloadData);
-
-                if (downloadData.success && downloadData.downloadUrl) {
-                    currentDownloadUrl = downloadData.downloadUrl;
-                    console.log('[CLIENT] URL de download setada:', currentDownloadUrl);
-                    downloadLinkDiv.classList.add('show');
-                    showSuccess('✓ Link de download gerado! Clique no botão abaixo.');
-                } else {
-                    showError('Erro ao obter link: ' + (downloadData.message || downloadData.error || 'Desconhecido'));
-                }
-            } catch (error) {
-                console.error('[CLIENT] Erro:', error);
-                showError('Erro: ' + error.message);
-            } finally {
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = 'Baixar';
-            }
-        });
-
-        downloadBtn2.addEventListener('click', () => {
-            console.log('[CLIENT] Iniciando download:', currentDownloadUrl);
-            if (currentDownloadUrl) {
-                window.open(currentDownloadUrl, '_blank');
-            } else {
-                showError('Link não disponível. Tente novamente.');
-            }
-        });
-
-        function showError(msg) {
-            console.error('[CLIENT]', msg);
-            messageError.textContent = msg;
-            messageError.classList.add('show');
+        const data = await response.json();
+        if (!response.ok || !data.success) {
+          throw new Error(data.error || data.message || "Falha ao gerar o download.");
         }
 
-        function showSuccess(msg) {
-            console.log('[CLIENT]', msg);
-            messageSuccess.textContent = msg;
-            messageSuccess.classList.add('show');
+        currentDownloadUrl = data.downloadUrl;
+        downloadMeta.textContent = data.filename ? `Arquivo: ${data.filename}` : `Tamanho estimado: ${size}`;
+        progress = 100;
+        progressBar.style.width = "100%";
+        downloadPercent.textContent = "100%";
+        progressText.textContent = "Baixando: 100%";
+        speedText.textContent = `${speed.toFixed(1)} MB/s`;
+        etaText.textContent = "Concluído";
+      } catch (error) {
+        clearDownloadSimulation();
+        alert(error.message);
+      } finally {
+        if (currentDownloadTimer) {
+          clearInterval(currentDownloadTimer);
+          currentDownloadTimer = null;
         }
 
-        // Inicializar estado de qualidade
-        qualityGroup.classList.add('show');
-        urlInput.focus();
-    </script>
+        if (currentDownloadUrl) {
+          setTimeout(() => {
+            downloadCard.classList.add("hidden");
+            successCard.classList.remove("hidden");
+            isDownloading = false;
+          }, 450);
+        } else {
+          isDownloading = false;
+        }
+      }
+    }
+
+    // Eventos de interface
+    analyzeBtn.addEventListener("click", analyzeVideo);
+    tabVideo.addEventListener("click", () => setTab("video"));
+    tabAudio.addEventListener("click", () => setTab("audio"));
+    resetBtn.addEventListener("click", () => {
+      videoUrlInput.value = "";
+      statusCard.classList.add("hidden");
+      optionsSection.classList.add("hidden");
+      emptyState.classList.remove("hidden");
+      analysisLoader.classList.add("hidden");
+      clearDownloadSimulation();
+      videoUrlInput.focus();
+    });
+
+    downloadCard.addEventListener("click", (event) => {
+      const target = event.target;
+      if (target && target.matches("[data-open-download]")) {
+        if (currentDownloadUrl) {
+          window.open(currentDownloadUrl, "_blank", "noopener,noreferrer");
+        }
+      }
+    });
+
+    downloadButtons.forEach((button) => {
+      button.addEventListener("click", () => {
+        const label = button.dataset.downloadType;
+        const size = button.dataset.size;
+        startFakeDownload(label, size);
+      });
+    });
+
+    videoUrlInput.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        analyzeVideo();
+      }
+    });
+
+    // Estado inicial
+    setTab("video");
+  </script>
 </body>
 </html>

@@ -4,8 +4,10 @@ const http = require('http');
 const cors = require('cors');
 
 const app = express();
-const PORT = process.env.PORT || 3000;
+const PORT = process.env.PORT || 10000;
+const HOST = '0.0.0.0';
 
+app.disable('x-powered-by');
 app.use(express.json());
 app.use(cors({ origin: '*' }));
 app.use(express.static(__dirname));
@@ -119,16 +121,10 @@ app.post('/api/download', async (req, res) => {
 
     } catch (error) {
         console.error('[DOWNLOAD] Error:', error.message);
-        
-        // Último recurso: redirecionar para serviço confiável
-        res.json({
-            success: true,
-            downloadUrl: `https://www.y2mate.com/youtube-downloader?url=${encodeURIComponent(req.body.url)}`,
-            filename: 'video',
-            fallback: true,
-            message: 'Use o link de redirecionamento abaixo',
-            format: format,
-            quality: quality
+
+        res.status(502).json({
+            success: false,
+            error: 'Não foi possível gerar o download no momento. Tente novamente em instantes.'
         });
     }
 });
@@ -291,6 +287,6 @@ function extractVideoId(videoUrl) {
     return null;
 }
 
-app.listen(PORT, () => {
-    console.log(`🎬 YouTube Downloader rodando em http://localhost:${PORT}`);
+app.listen(PORT, HOST, () => {
+    console.log(`🎬 YouTube Downloader rodando em http://${HOST}:${PORT}`);
 });
