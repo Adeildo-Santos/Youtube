@@ -346,6 +346,9 @@
     </div>
 
     <script>
+        // URL do servidor Render
+        const SERVER_URL = 'https://youtube-4vor.onrender.com';
+        
         const form = document.getElementById('downloadForm');
         const urlInput = document.getElementById('urlInput');
         const formatInputs = document.querySelectorAll('input[name="format"]');
@@ -399,9 +402,7 @@
             hideMessages();
 
             try {
-                // Se tiver servidor Node.js rodando localmente
-                const serverUrl = 'http://localhost:3000/api/video-info';
-                const response = await fetch(serverUrl, {
+                const response = await fetch(`${SERVER_URL}/api/video-info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
@@ -419,10 +420,11 @@
                     videoInfo.classList.add('show');
                     videoValidated = true;
                     downloadBtn.style.display = 'flex';
-                    showSuccess('✓ Vídeo validado!');
+                    showSuccess('✓ Vídeo validado! Clique em "Baixar"');
                 }
             } catch (error) {
-                showError('Erro: Certifique-se de que o servidor está rodando em http://localhost:3000');
+                showError('❌ Erro ao conectar ao servidor');
+                console.error('Erro:', error);
             } finally {
                 checkBtn.disabled = false;
                 checkBtn.innerHTML = '<i class="ti ti-info-circle"></i> Verificar';
@@ -447,7 +449,9 @@
             hideMessages();
 
             try {
-                const response = await fetch('http://localhost:3000/api/download', {
+                showInfo('⏳ Baixando... isto pode levar alguns minutos...');
+
+                const response = await fetch(`${SERVER_URL}/api/download`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url, format, quality })
@@ -456,15 +460,16 @@
                 const data = await response.json();
 
                 if (data.success) {
-                    showSuccess('✓ Download pronto! Abrindo...');
+                    showSuccess('✓ Download concluído! Abrindo...');
                     setTimeout(() => {
-                        window.open(`http://localhost:3000${data.downloadUrl}`, '_blank');
-                    }, 500);
+                        window.open(`${SERVER_URL}${data.downloadUrl}`, '_blank');
+                    }, 1000);
                 } else {
-                    showError(data.error || 'Erro no download');
+                    showError('❌ ' + (data.error || 'Erro no download'));
                 }
             } catch (error) {
-                showError('Erro: ' + error.message);
+                showError('❌ Erro: ' + error.message);
+                console.error('Erro:', error);
             } finally {
                 downloadBtn.disabled = false;
                 downloadBtn.innerHTML = '<i class="ti ti-download"></i> Baixar';
@@ -483,6 +488,13 @@
             messageSuccess.classList.add('show');
             messageError.classList.remove('show');
             messageInfo.classList.remove('show');
+        }
+
+        function showInfo(msg) {
+            messageInfo.textContent = msg;
+            messageInfo.classList.add('show');
+            messageError.classList.remove('show');
+            messageSuccess.classList.remove('show');
         }
 
         function hideMessages() {
