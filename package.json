@@ -4,9 +4,8 @@
   "description": "YouTube Downloader com Express e yt-dlp",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js",
-    "dev": "nodemon server.js",
-    "postinstall": "pip install yt-dlp --break-system-packages 2>/dev/null || apt-get update && apt-get install -y yt-dlp ffmpeg 2>/dev/null || true"
+    "start": "bash start.sh",
+    "dev": "nodemon server.js"
   },
   "keywords": [
     "youtube",
