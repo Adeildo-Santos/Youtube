@@ -14,28 +14,24 @@
         .content { padding: 40px 30px; }
         .form-group { margin-bottom: 25px; }
         label { display: block; margin-bottom: 10px; font-weight: 500; color: #333; }
-        input, select { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
-        input:focus, select:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        input { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
         .button-group { display: flex; gap: 10px; margin-top: 25px; }
         button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; transition: all 0.3s; }
         .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover:not(:disabled) { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
-        .btn-secondary { background: #f5f5f5; color: #333; border: 2px solid #e0e0e0; }
+        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
         .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
         .message.show { display: block; }
-        .message.error { background: #fee; color: #c33; border-left: 4px solid #c33; }
         .message.success { background: #efe; color: #3c3; border-left: 4px solid #3c3; }
         .video-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none; }
         .video-info.show { display: block; }
+        .download-services { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
+        .service { padding: 15px; background: #f9f9f9; border-radius: 8px; text-align: center; border: 2px solid #e0e0e0; }
+        .service a { display: block; padding: 10px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; transition: all 0.3s; margin-top: 10px; }
+        .service a:hover { background: #5568d3; }
         .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 0.8s infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
         .footer { border-top: 1px solid #e0e0e0; padding: 20px 30px; background: #fafafa; font-size: 12px; color: #999; text-align: center; }
-        .format-selector { display: grid; grid-template-columns: 1fr 1fr; gap: 10px; margin-top: 8px; }
-        .format-option { padding: 12px; border: 1px solid #dadce0; border-radius: 6px; cursor: pointer; text-align: center; }
-        .format-option input { display: none; }
-        .format-option:has(input:checked) { border-color: #667eea; background: rgba(102,126,234,0.05); }
-        .quality-selector { display: none; }
-        .quality-selector.show { display: block; }
     </style>
 </head>
 <body>
@@ -45,44 +41,21 @@
             <p>Baixe vídeos do YouTube em alta qualidade</p>
         </div>
         <div class="content">
-            <div class="message error" id="messageError"></div>
             <div class="message success" id="messageSuccess"></div>
             <form id="downloadForm">
                 <div class="form-group">
                     <label>URL do vídeo YouTube</label>
                     <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." required>
                 </div>
-                <div class="form-group">
-                    <label>Formato</label>
-                    <div class="format-selector">
-                        <div class="format-option">
-                            <input type="radio" id="format-video" name="format" value="video" checked>
-                            <label for="format-video" style="margin: 0;"><i class="ti ti-video"></i><br>Vídeo (MP4)</label>
-                        </div>
-                        <div class="format-option">
-                            <input type="radio" id="format-audio" name="format" value="audio">
-                            <label for="format-audio" style="margin: 0;"><i class="ti ti-music"></i><br>Áudio (MP3)</label>
-                        </div>
-                    </div>
-                </div>
-                <div class="form-group quality-selector" id="qualityGroup">
-                    <label>Qualidade</label>
-                    <select id="quality">
-                        <option value="best">Melhor disponível</option>
-                        <option value="720">720p HD</option>
-                        <option value="480">480p SD</option>
-                    </select>
-                </div>
                 <div class="video-info" id="videoInfo">
                     <div><strong id="videoTitle">-</strong></div>
-                    <div id="videoDuration" style="font-size: 13px; color: #999; margin-top: 5px;">-</div>
+                    <div id="videoAuthor" style="font-size: 13px; color: #999; margin-top: 5px;">-</div>
                 </div>
                 <div class="button-group">
-                    <button type="button" class="btn-secondary" id="clearBtn"><i class="ti ti-trash"></i> Limpar</button>
-                    <button type="button" class="btn-primary" id="checkBtn"><i class="ti ti-info-circle"></i> Verificar</button>
-                    <button type="submit" class="btn-primary" id="downloadBtn" style="display: none;"><i class="ti ti-download"></i> Baixar</button>
+                    <button type="submit" class="btn-primary"><i class="ti ti-download"></i> Gerar Download</button>
                 </div>
             </form>
+            <div id="downloadResult"></div>
         </div>
         <div class="footer">
             <p>⚠️ Respeite os direitos autorais.</p>
@@ -93,127 +66,69 @@
         const SERVER = 'https://youtube-4vor.onrender.com';
         const form = document.getElementById('downloadForm');
         const urlInput = document.getElementById('urlInput');
-        const formatInputs = document.querySelectorAll('input[name="format"]');
-        const qualityGroup = document.getElementById('qualityGroup');
-        const checkBtn = document.getElementById('checkBtn');
-        const downloadBtn = document.getElementById('downloadBtn');
-        const clearBtn = document.getElementById('clearBtn');
-        const messageError = document.getElementById('messageError');
         const messageSuccess = document.getElementById('messageSuccess');
         const videoInfo = document.getElementById('videoInfo');
+        const downloadResult = document.getElementById('downloadResult');
 
-        let videoValidated = false;
-
-        formatInputs.forEach(input => {
-            input.addEventListener('change', function() {
-                qualityGroup.classList.toggle('show', this.value === 'video');
-                videoValidated = false;
-                downloadBtn.style.display = 'none';
-            });
-        });
-
-        clearBtn.addEventListener('click', () => {
-            form.reset();
-            videoInfo.classList.remove('show');
-            messageError.classList.remove('show');
-            messageSuccess.classList.remove('show');
-            videoValidated = false;
-            downloadBtn.style.display = 'none';
-            urlInput.focus();
-        });
-
-        checkBtn.addEventListener('click', async (e) => {
+        form.addEventListener('submit', async (e) => {
             e.preventDefault();
-            const url = urlInput.value.trim();
             
+            const url = urlInput.value.trim();
             if (!url) {
-                showError('Insira uma URL');
+                alert('Cole uma URL válida');
                 return;
             }
 
-            checkBtn.disabled = true;
-            checkBtn.innerHTML = '<div class="loading"></div> Verificando...';
-            messageError.classList.remove('show');
+            downloadResult.innerHTML = '';
+            messageSuccess.classList.remove('show');
 
             try {
-                const res = await fetch(`${SERVER}/api/video-info`, {
+                // Verificar informações do vídeo
+                const infoRes = await fetch(`${SERVER}/api/video-info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
                     body: JSON.stringify({ url })
                 });
 
-                const data = await res.json();
+                const infoData = await infoRes.json();
 
-                if (data.success) {
-                    document.getElementById('videoTitle').textContent = data.title;
-                    document.getElementById('videoDuration').textContent = `⏱️ ${data.duration}`;
+                if (infoData.success) {
+                    document.getElementById('videoTitle').textContent = infoData.title;
+                    document.getElementById('videoAuthor').textContent = `👤 ${infoData.author}`;
                     videoInfo.classList.add('show');
-                    videoValidated = true;
-                    downloadBtn.style.display = 'flex';
-                    showSuccess('✓ Vídeo validado!');
-                } else {
-                    showError(data.error || 'Erro ao validar');
                 }
-            } catch (error) {
-                showError('Erro: ' + error.message);
-            } finally {
-                checkBtn.disabled = false;
-                checkBtn.innerHTML = '<i class="ti ti-info-circle"></i> Verificar';
-            }
-        });
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            
-            if (!videoValidated) {
-                showError('Verifique o vídeo primeiro');
-                return;
-            }
-
-            const url = urlInput.value.trim();
-            const format = document.querySelector('input[name="format"]:checked').value;
-            const quality = document.getElementById('quality').value;
-
-            downloadBtn.disabled = true;
-            downloadBtn.innerHTML = '<div class="loading"></div> Baixando...';
-            messageError.classList.remove('show');
-
-            try {
-                const res = await fetch(`${SERVER}/api/download`, {
+                // Obter links de download
+                const downloadRes = await fetch(`${SERVER}/api/download`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, format, quality })
+                    body: JSON.stringify({ url, format: 'video', quality: 'best' })
                 });
 
-                const data = await res.json();
+                const downloadData = await downloadRes.json();
 
-                if (data.success) {
-                    showSuccess('✓ Download pronto!');
-                    setTimeout(() => {
-                        window.open(`${SERVER}${data.downloadUrl}`, '_blank');
-                    }, 500);
-                } else {
-                    showError(data.error || 'Erro no download');
+                if (downloadData.success) {
+                    messageSuccess.textContent = '✓ Links de download gerados!';
+                    messageSuccess.classList.add('show');
+
+                    let html = '<div class="download-services">';
+                    for (const [service, link] of Object.entries(downloadData.downloadServices)) {
+                        html += `
+                            <div class="service">
+                                <strong>${service.toUpperCase()}</strong>
+                                <a href="${link}" target="_blank">Abrir</a>
+                            </div>
+                        `;
+                    }
+                    html += '</div>';
+                    
+                    downloadResult.innerHTML = html;
                 }
             } catch (error) {
-                showError('Erro: ' + error.message);
-            } finally {
-                downloadBtn.disabled = false;
-                downloadBtn.innerHTML = '<i class="ti ti-download"></i> Baixar';
+                messageSuccess.textContent = '❌ Erro: ' + error.message;
+                messageSuccess.classList.add('show');
             }
         });
-
-        function showError(msg) {
-            messageError.textContent = msg;
-            messageError.classList.add('show');
-            messageSuccess.classList.remove('show');
-        }
-
-        function showSuccess(msg) {
-            messageSuccess.textContent = msg;
-            messageSuccess.classList.add('show');
-            messageError.classList.remove('show');
-        }
 
         urlInput.focus();
     </script>
