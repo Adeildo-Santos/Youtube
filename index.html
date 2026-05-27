@@ -4,35 +4,16 @@
   <meta charset="UTF-8" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>YouTube Downloader | Protótipo</title>
-  <script src="https://cdn.tailwindcss.com"></script>
-  <script>
-    tailwind.config = {
-      theme: {
-        extend: {
-          colors: {
-            brand: {
-              50: "#fff1f1",
-              100: "#ffdcdc",
-              200: "#ffb3b3",
-              300: "#ff8888",
-              400: "#ff5f5f",
-              500: "#ff2d2d",
-              600: "#e51d1d",
-              700: "#bb1515",
-              800: "#7e1010",
-              900: "#520b0b"
-            }
-          },
-          boxShadow: {
-            glow: "0 0 0 1px rgba(255,45,45,.25), 0 18px 70px rgba(0,0,0,.6)"
-          }
-        }
-      }
-    };
-  </script>
+  <link rel="stylesheet" href="/tailwind.css" />
   <style>
     :root {
       color-scheme: dark;
+    }
+    .line-clamp-2 {
+      display: -webkit-box;
+      -webkit-line-clamp: 2;
+      -webkit-box-orient: vertical;
+      overflow: hidden;
     }
     body {
       background:

@@ -6,10 +6,15 @@
     "node": ">=20 <25"
   },
   "scripts": {
+    "build": "tailwindcss -c tailwind.config.js -i ./src/input.css -o ./tailwind.css --minify",
+    "postinstall": "npm run build",
     "start": "node server.js"
   },
   "dependencies": {
     "express": "^4.18.2",
     "cors": "^2.8.5"
+  },
+  "devDependencies": {
+    "tailwindcss": "^3.4.17"
   }
 }
