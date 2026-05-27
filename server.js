@@ -18,8 +18,14 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
     fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
 
+// Encontrar yt-dlp
+const YT_DLP_PATH = process.env.HOME ? path.join(process.env.HOME, '.local', 'bin', 'yt-dlp') : 'yt-dlp';
+
+console.log('[STARTUP] yt-dlp path:', YT_DLP_PATH);
+console.log('[STARTUP] PATH:', process.env.PATH);
+
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', timestamp: new Date().toISOString() });
+    res.json({ status: 'ok', timestamp: new Date().toISOString(), ytDlpPath: YT_DLP_PATH });
 });
 
 app.post('/api/video-info', (req, res) => {
@@ -31,8 +37,9 @@ app.post('/api/video-info', (req, res) => {
 
     console.log('[VIDEO-INFO]', url);
 
-    const child = spawn('yt-dlp', ['-j', '--no-warnings', url], {
-        timeout: 30000
+    const child = spawn(YT_DLP_PATH, ['-j', '--no-warnings', url], {
+        timeout: 30000,
+        env: { ...process.env }
     });
 
     let stdout = '';
@@ -49,7 +56,7 @@ app.post('/api/video-info', (req, res) => {
     child.on('close', (code) => {
         if (code !== 0) {
             console.error('[VIDEO-INFO] Error:', stderr);
-            return res.status(400).json({ error: 'Erro ao obter informações' });
+            return res.status(400).json({ error: 'Erro ao obter informações: ' + stderr });
         }
 
         try {
@@ -62,13 +69,14 @@ app.post('/api/video-info', (req, res) => {
                 duration: duration
             });
         } catch (e) {
+            console.error('[VIDEO-INFO] Parse error:', e.message);
             res.status(400).json({ error: 'Erro ao processar vídeo' });
         }
     });
 
     child.on('error', (error) => {
         console.error('[VIDEO-INFO] Error:', error.message);
-        res.status(400).json({ error: 'yt-dlp não encontrado' });
+        res.status(400).json({ error: 'yt-dlp não encontrado: ' + error.message });
     });
 });
 
@@ -105,19 +113,22 @@ app.post('/api/download', (req, res) => {
         ];
     }
 
-    const child = spawn('yt-dlp', args, { timeout: 300000 });
+    const child = spawn(YT_DLP_PATH, args, { 
+        timeout: 300000,
+        env: { ...process.env }
+    });
 
     let stderr = '';
 
     child.stderr.on('data', (data) => {
         stderr += data.toString();
-        console.log('[DOWNLOAD]', data.toString());
+        console.log('[DOWNLOAD]', data.toString().trim());
     });
 
     child.on('close', (code) => {
         if (code !== 0) {
             console.error('[DOWNLOAD] Error:', stderr);
-            return res.status(400).json({ error: 'Erro ao baixar vídeo' });
+            return res.status(400).json({ error: 'Erro ao baixar vídeo: ' + stderr });
         }
 
         try {
@@ -140,13 +151,14 @@ app.post('/api/download', (req, res) => {
                 res.status(400).json({ error: 'Arquivo não encontrado' });
             }
         } catch (e) {
+            console.error('[DOWNLOAD] Error:', e.message);
             res.status(500).json({ error: e.message });
         }
     });
 
     child.on('error', (error) => {
         console.error('[DOWNLOAD] Error:', error.message);
-        res.status(400).json({ error: 'Erro ao iniciar download' });
+        res.status(400).json({ error: 'Erro ao iniciar download: ' + error.message });
     });
 });
 
@@ -184,4 +196,5 @@ function formatDuration(seconds) {
 app.listen(PORT, () => {
     console.log(`🎬 YouTube Downloader em http://localhost:${PORT}`);
     console.log(`📁 Downloads: ${DOWNLOADS_DIR}`);
+    console.log(`🔧 yt-dlp: ${YT_DLP_PATH}`);
 });
