@@ -3,6 +3,8 @@ services:
     name: youtube-downloader
     env: node
     plan: free
-    buildCommand: npm install && apt-get update && apt-get install -y yt-dlp ffmpeg
-    startCommand: npm start
-    healthCheckPath: /api/health
+    buildCommand: npm install && curl -L https://github.com/yt-dlp/yt-dlp/releases/latest/download/yt-dlp -o /usr/local/bin/yt-dlp && chmod +x /usr/local/bin/yt-dlp
+    startCommand: node server.js
+    envVars:
+      - key: PATH
+        value: /usr/local/bin:$PATH
