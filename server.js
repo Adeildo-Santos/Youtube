@@ -28,6 +28,26 @@ if (!fs.existsSync(DOWNLOADS_DIR)) {
     fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
 
+// Função para executar yt-dlp
+function runYtDlp(args, callback) {
+    // Tentar com python3 -m yt_dlp primeiro (para Render)
+    execFile('python3', ['-m', 'yt_dlp', ...args], { 
+        timeout: 30000,
+        maxBuffer: 10 * 1024 * 1024,
+        env: { ...process.env, PATH: `${process.env.HOME}/.local/bin:${process.env.PATH}` }
+    }, (error, stdout, stderr) => {
+        if (error && error.code === 'ENOENT') {
+            // Fallback: tentar com yt-dlp direto
+            execFile('yt-dlp', args, { 
+                timeout: 30000,
+                maxBuffer: 10 * 1024 * 1024
+            }, callback);
+        } else {
+            callback(error, stdout, stderr);
+        }
+    });
+}
+
 // Health check
 app.get('/api/health', (req, res) => {
     res.json({ 
@@ -48,12 +68,7 @@ app.post('/api/video-info', (req, res) => {
         return res.status(400).json({ error: 'URL é obrigatória' });
     }
 
-    // Usar execFile ao invés de exec para melhor segurança
-    execFile('yt-dlp', ['-j', '--no-warnings', url], { 
-        timeout: 30000,
-        maxBuffer: 10 * 1024 * 1024 
-    }, (error, stdout, stderr) => {
-        
+    runYtDlp(['-j', '--no-warnings', url], (error, stdout, stderr) => {
         if (error) {
             console.error('[VIDEO-INFO] ERRO:', error.message);
             console.error('[VIDEO-INFO] STDERR:', stderr);
@@ -123,13 +138,9 @@ app.post('/api/download', (req, res) => {
         ];
     }
 
-    console.log('[DOWNLOAD] Executando yt-dlp com args:', args.slice(0, 5), '...');
+    console.log('[DOWNLOAD] Executando yt-dlp...');
 
-    execFile('yt-dlp', args, { 
-        timeout: 300000,
-        maxBuffer: 50 * 1024 * 1024 
-    }, (error, stdout, stderr) => {
-        
+    runYtDlp(args, (error, stdout, stderr) => {
         if (error) {
             console.error('[DOWNLOAD] ERRO:', error.message);
             console.error('[DOWNLOAD] STDERR:', stderr);
@@ -139,7 +150,7 @@ app.post('/api/download', (req, res) => {
             });
         }
 
-        console.log('[DOWNLOAD] Download concluído, procurando arquivo...');
+        console.log('[DOWNLOAD] Download concluído');
 
         try {
             const files = fs.readdirSync(DOWNLOADS_DIR);
@@ -215,5 +226,4 @@ function formatDuration(seconds) {
 app.listen(PORT, () => {
     console.log(`🎬 YouTube Downloader rodando em http://localhost:${PORT}`);
     console.log(`📁 Diretório: ${DOWNLOADS_DIR}`);
-    console.log(`🔧 yt-dlp deve estar instalado no PATH`);
 });
