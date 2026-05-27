@@ -10,84 +10,96 @@
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
         .container { width: 100%; max-width: 600px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
-        .header h1 { font-size: 28px; margin-bottom: 10px; display: flex; align-items: center; justify-content: center; gap: 12px; }
+        .header h1 { font-size: 28px; margin-bottom: 10px; }
         .content { padding: 40px 30px; }
-        .form-group { margin-bottom: 25px; }
-        label { display: block; margin-bottom: 10px; font-weight: 500; color: #333; }
-        input { width: 100%; padding: 12px 16px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        .form-group { margin-bottom: 20px; }
+        label { display: block; margin-bottom: 8px; font-weight: 500; color: #333; }
+        input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
         input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        .button-group { display: flex; gap: 10px; margin-top: 25px; }
-        button { padding: 12px 24px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; display: flex; align-items: center; gap: 8px; flex: 1; justify-content: center; transition: all 0.3s; }
-        .btn-primary { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; }
-        .btn-primary:hover { transform: translateY(-2px); box-shadow: 0 10px 20px rgba(102,126,234,0.3); }
+        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.3s; }
+        .btn-primary { background: #667eea; color: white; }
+        .btn-primary:hover:not(:disabled) { background: #5568d3; }
+        .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
         .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
         .message.show { display: block; }
         .message.success { background: #efe; color: #3c3; border-left: 4px solid #3c3; }
+        .message.error { background: #fee; color: #c33; border-left: 4px solid #c33; }
         .video-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none; }
         .video-info.show { display: block; }
-        .download-services { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 20px; }
-        .service { padding: 15px; background: #f9f9f9; border-radius: 8px; text-align: center; border: 2px solid #e0e0e0; }
-        .service a { display: block; padding: 10px; background: #667eea; color: white; text-decoration: none; border-radius: 6px; font-size: 13px; font-weight: 600; transition: all 0.3s; margin-top: 10px; }
-        .service a:hover { background: #5568d3; }
-        .loading { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 0.8s infinite; }
+        .download-link { margin-top: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border: 2px solid #667eea; display: none; }
+        .download-link.show { display: block; }
+        .download-link a { display: inline-block; padding: 12px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 10px; }
+        .download-link a:hover { background: #45a049; }
+        .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 0.8s infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
-        .footer { border-top: 1px solid #e0e0e0; padding: 20px 30px; background: #fafafa; font-size: 12px; color: #999; text-align: center; }
+        .footer { border-top: 1px solid #e0e0e0; padding: 15px 30px; background: #fafafa; font-size: 12px; color: #999; text-align: center; }
     </style>
 </head>
 <body>
     <div class="container">
         <div class="header">
-            <h1><i class="ti ti-brand-youtube"></i> YouTube Downloader</h1>
-            <p>Baixe vídeos do YouTube em alta qualidade</p>
+            <h1>🎬 YouTube Downloader</h1>
+            <p>Baixe vídeos do YouTube</p>
         </div>
         <div class="content">
+            <div class="message error" id="messageError"></div>
             <div class="message success" id="messageSuccess"></div>
-            <form id="downloadForm">
-                <div class="form-group">
-                    <label>URL do vídeo YouTube</label>
-                    <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." required>
-                </div>
-                <div class="video-info" id="videoInfo">
-                    <div><strong id="videoTitle">-</strong></div>
-                    <div id="videoAuthor" style="font-size: 13px; color: #999; margin-top: 5px;">-</div>
-                </div>
-                <div class="button-group">
-                    <button type="submit" class="btn-primary"><i class="ti ti-download"></i> Gerar Download</button>
-                </div>
-            </form>
-            <div id="downloadResult"></div>
+            
+            <div class="form-group">
+                <label>URL do YouTube</label>
+                <input type="url" id="urlInput" placeholder="https://www.youtube.com/watch?v=..." required>
+            </div>
+
+            <div class="video-info" id="videoInfo">
+                <div><strong id="videoTitle">-</strong></div>
+                <div id="videoAuthor" style="font-size: 13px; color: #999; margin-top: 5px;">-</div>
+            </div>
+
+            <div class="button-group">
+                <button id="downloadBtn" class="btn-primary">Baixar</button>
+            </div>
+
+            <div class="download-link" id="downloadLink">
+                <p>✓ Link de download gerado!</p>
+                <a id="downloadLink" href="#" target="_blank">CLIQUE AQUI PARA BAIXAR</a>
+            </div>
         </div>
         <div class="footer">
-            <p>⚠️ Respeite os direitos autorais.</p>
+            <p>⚠️ Respeite os direitos autorais</p>
         </div>
     </div>
 
     <script>
         const SERVER = 'https://youtube-4vor.onrender.com';
-        const form = document.getElementById('downloadForm');
         const urlInput = document.getElementById('urlInput');
-        const messageSuccess = document.getElementById('messageSuccess');
+        const downloadBtn = document.getElementById('downloadBtn');
         const videoInfo = document.getElementById('videoInfo');
-        const downloadResult = document.getElementById('downloadResult');
+        const downloadLink = document.getElementById('downloadLink');
+        const downloadLinkDiv = document.getElementById('downloadLink').parentElement;
+        const messageError = document.getElementById('messageError');
+        const messageSuccess = document.getElementById('messageSuccess');
 
-        form.addEventListener('submit', async (e) => {
-            e.preventDefault();
+        downloadBtn.addEventListener('click', async () => {
+            const videoUrl = urlInput.value.trim();
             
-            const url = urlInput.value.trim();
-            if (!url) {
-                alert('Cole uma URL válida');
+            if (!videoUrl) {
+                showError('Cole uma URL válida');
                 return;
             }
 
-            downloadResult.innerHTML = '';
+            downloadBtn.disabled = true;
+            downloadBtn.innerHTML = '<div class="loading"></div> Processando...';
+            messageError.classList.remove('show');
             messageSuccess.classList.remove('show');
+            downloadLinkDiv.classList.remove('show');
 
             try {
-                // Verificar informações do vídeo
+                // Obter informações
                 const infoRes = await fetch(`${SERVER}/api/video-info`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url })
+                    body: JSON.stringify({ url: videoUrl })
                 });
 
                 const infoData = await infoRes.json();
@@ -98,37 +110,39 @@
                     videoInfo.classList.add('show');
                 }
 
-                // Obter links de download
+                // Obter link de download
                 const downloadRes = await fetch(`${SERVER}/api/download`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url, format: 'video', quality: 'best' })
+                    body: JSON.stringify({ url: videoUrl })
                 });
 
                 const downloadData = await downloadRes.json();
 
-                if (downloadData.success) {
-                    messageSuccess.textContent = '✓ Links de download gerados!';
-                    messageSuccess.classList.add('show');
-
-                    let html = '<div class="download-services">';
-                    for (const [service, link] of Object.entries(downloadData.downloadServices)) {
-                        html += `
-                            <div class="service">
-                                <strong>${service.toUpperCase()}</strong>
-                                <a href="${link}" target="_blank">Abrir</a>
-                            </div>
-                        `;
-                    }
-                    html += '</div>';
-                    
-                    downloadResult.innerHTML = html;
+                if (downloadData.success && downloadData.downloadUrl) {
+                    document.getElementById('downloadLink').href = downloadData.downloadUrl;
+                    downloadLinkDiv.classList.add('show');
+                    showSuccess('✓ Link de download gerado! Clique no botão abaixo.');
+                } else {
+                    showError('Erro ao obter link de download');
                 }
             } catch (error) {
-                messageSuccess.textContent = '❌ Erro: ' + error.message;
-                messageSuccess.classList.add('show');
+                showError('Erro: ' + error.message);
+            } finally {
+                downloadBtn.disabled = false;
+                downloadBtn.innerHTML = 'Baixar';
             }
         });
+
+        function showError(msg) {
+            messageError.textContent = msg;
+            messageError.classList.add('show');
+        }
+
+        function showSuccess(msg) {
+            messageSuccess.textContent = msg;
+            messageSuccess.classList.add('show');
+        }
 
         urlInput.focus();
     </script>
