@@ -1,6 +1,6 @@
 const express = require('express');
 const path = require('path');
-const { exec } = require('child_process');
+const { execFile } = require('child_process');
 const fs = require('fs');
 const os = require('os');
 const cors = require('cors');
@@ -12,7 +12,7 @@ const PORT = process.env.PORT || 3000;
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
-// CORS - Permitir requisições de qualquer origem
+// CORS
 app.use(cors({
   origin: '*',
   methods: ['GET', 'POST', 'OPTIONS'],
@@ -21,176 +21,158 @@ app.use(cors({
 
 app.use(express.static(__dirname));
 
-// Diretório para downloads temporários
+// Diretório para downloads
 const DOWNLOADS_DIR = path.join(os.tmpdir(), 'youtube_downloads');
 
-// Criar diretório se não existir
 if (!fs.existsSync(DOWNLOADS_DIR)) {
     fs.mkdirSync(DOWNLOADS_DIR, { recursive: true });
 }
 
-// Limpar downloads antigos a cada hora
-setInterval(() => {
-    try {
-        const files = fs.readdirSync(DOWNLOADS_DIR);
-        const now = Date.now();
-        const maxAge = 60 * 60 * 1000; // 1 hora
-
-        files.forEach(file => {
-            try {
-                const filePath = path.join(DOWNLOADS_DIR, file);
-                const stat = fs.statSync(filePath);
-                if (now - stat.mtimeMs > maxAge) {
-                    fs.unlinkSync(filePath);
-                    console.log(`Arquivo expirado deletado: ${file}`);
-                }
-            } catch (e) {
-                console.error('Erro ao limpar arquivo:', e.message);
-            }
-        });
-    } catch (e) {
-        console.error('Erro ao limpar diretório:', e.message);
-    }
-}, 60 * 60 * 1000);
-
-// Servir arquivo HTML
-app.get('/', (req, res) => {
-    res.sendFile(path.join(__dirname, 'youtube_downloader_updated.html'));
-});
-
 // Health check
 app.get('/api/health', (req, res) => {
-    res.json({ status: 'ok', yt_dlp: checkYtDlp() });
+    res.json({ 
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        port: PORT
+    });
 });
 
-// Verificar se yt-dlp está disponível
-function checkYtDlp() {
-    return new Promise((resolve) => {
-        exec('which yt-dlp', (error) => {
-            resolve(!error);
-        });
-    });
-}
-
-// Endpoint para validar e obter informações do vídeo
-app.post('/api/video-info', async (req, res) => {
+// Video info
+app.post('/api/video-info', (req, res) => {
     const { url } = req.body;
 
+    console.log('[VIDEO-INFO] URL:', url);
+
     if (!url) {
+        console.log('[VIDEO-INFO] URL vazia');
         return res.status(400).json({ error: 'URL é obrigatória' });
     }
 
-    try {
-        // Comando para obter informações do vídeo
-        const command = `yt-dlp -j --no-warnings "${url}"`;
+    // Usar execFile ao invés de exec para melhor segurança
+    execFile('yt-dlp', ['-j', '--no-warnings', url], { 
+        timeout: 30000,
+        maxBuffer: 10 * 1024 * 1024 
+    }, (error, stdout, stderr) => {
+        
+        if (error) {
+            console.error('[VIDEO-INFO] ERRO:', error.message);
+            console.error('[VIDEO-INFO] STDERR:', stderr);
+            return res.status(400).json({ 
+                error: 'Erro ao obter informações: ' + error.message,
+                details: stderr
+            });
+        }
 
-        exec(command, { timeout: 30000 }, (error, stdout, stderr) => {
-            if (error) {
-                console.error('Erro yt-dlp:', error.message);
-                return res.status(400).json({ 
-                    error: 'Não foi possível obter informações do vídeo. Verifique a URL.' 
-                });
-            }
-
-            try {
-                const info = JSON.parse(stdout);
-                res.json({
-                    success: true,
-                    title: info.title || 'Vídeo',
-                    duration: info.duration ? formatDuration(info.duration) : 'Desconhecido',
-                    formats: info.formats || []
-                });
-            } catch (e) {
-                console.error('Erro ao parsear JSON:', e.message);
-                res.status(400).json({ error: 'Erro ao processar resposta do vídeo' });
-            }
-        });
-    } catch (error) {
-        console.error('Erro:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
+        try {
+            const info = JSON.parse(stdout);
+            const duration = info.duration ? formatDuration(info.duration) : 'Desconhecido';
+            
+            console.log('[VIDEO-INFO] Sucesso:', info.title);
+            res.json({
+                success: true,
+                title: info.title || 'Vídeo',
+                duration: duration,
+                formats: (info.formats || []).length
+            });
+        } catch (parseError) {
+            console.error('[VIDEO-INFO] Parse error:', parseError.message);
+            res.status(400).json({ 
+                error: 'Erro ao processar resposta',
+                details: parseError.message
+            });
+        }
+    });
 });
 
-// Endpoint para fazer download
-app.post('/api/download', async (req, res) => {
+// Download
+app.post('/api/download', (req, res) => {
     const { url, format, quality } = req.body;
+
+    console.log('[DOWNLOAD] URL:', url, 'Format:', format, 'Quality:', quality);
 
     if (!url || !format) {
         return res.status(400).json({ error: 'URL e formato são obrigatórios' });
     }
 
-    try {
-        let outputPath = path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s');
-        let command = '';
+    let args = [];
 
-        if (format === 'audio') {
-            // Download apenas áudio em MP3
-            command = `yt-dlp -f bestaudio --extract-audio --audio-format mp3 --audio-quality 192K -o "${outputPath}" "${url}" --no-warnings`;
-        } else {
-            // Download de vídeo com qualidade específica
-            const qualityMap = {
-                '720': '22',    // 720p
-                '480': '18',    // 480p
-                '360': '18',    // 360p (fallback)
-                'best': 'best'
-            };
+    if (format === 'audio') {
+        args = [
+            '-f', 'bestaudio',
+            '--extract-audio',
+            '--audio-format', 'mp3',
+            '--audio-quality', '192K',
+            '-o', path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s'),
+            url,
+            '--no-warnings'
+        ];
+    } else {
+        const qualityMap = {
+            '720': '22',
+            '480': '18',
+            '360': '18',
+            'best': 'best'
+        };
+        const fmt = qualityMap[quality] || 'best';
+        
+        args = [
+            '-f', fmt,
+            '-o', path.join(DOWNLOADS_DIR, '%(title)s.%(ext)s'),
+            url,
+            '--no-warnings'
+        ];
+    }
 
-            const fmt = qualityMap[quality] || 'best';
-            command = `yt-dlp -f ${fmt} -o "${outputPath}" "${url}" --no-warnings`;
+    console.log('[DOWNLOAD] Executando yt-dlp com args:', args.slice(0, 5), '...');
+
+    execFile('yt-dlp', args, { 
+        timeout: 300000,
+        maxBuffer: 50 * 1024 * 1024 
+    }, (error, stdout, stderr) => {
+        
+        if (error) {
+            console.error('[DOWNLOAD] ERRO:', error.message);
+            console.error('[DOWNLOAD] STDERR:', stderr);
+            return res.status(400).json({ 
+                error: 'Erro ao baixar: ' + error.message,
+                details: stderr
+            });
         }
 
-        console.log(`Iniciando download: ${url}`);
+        console.log('[DOWNLOAD] Download concluído, procurando arquivo...');
 
-        // Executar download
-        const process = exec(command, { timeout: 300000 }, (error, stdout, stderr) => {
-            if (error) {
-                console.error('Erro no download:', error.message);
-                return res.status(400).json({ 
-                    error: 'Erro ao baixar vídeo. O vídeo pode estar privado ou indisponível.' 
+        try {
+            const files = fs.readdirSync(DOWNLOADS_DIR);
+            const newestFile = files
+                .map(file => ({
+                    name: file,
+                    time: fs.statSync(path.join(DOWNLOADS_DIR, file)).mtime.getTime()
+                }))
+                .sort((a, b) => b.time - a.time)[0];
+
+            if (newestFile) {
+                console.log('[DOWNLOAD] Arquivo encontrado:', newestFile.name);
+                res.json({
+                    success: true,
+                    downloadUrl: `/download/${newestFile.name}`,
+                    filename: newestFile.name
                 });
+            } else {
+                console.error('[DOWNLOAD] Nenhum arquivo encontrado');
+                res.status(400).json({ error: 'Arquivo não encontrado após download' });
             }
-
-            console.log('Download concluído, procurando arquivo...');
-
-            // Encontrar arquivo baixado
-            try {
-                const files = fs.readdirSync(DOWNLOADS_DIR);
-                const newestFile = files
-                    .map(file => ({
-                        name: file,
-                        time: fs.statSync(path.join(DOWNLOADS_DIR, file)).mtime.getTime()
-                    }))
-                    .sort((a, b) => b.time - a.time)[0];
-
-                if (newestFile) {
-                    const downloadPath = `/download/${newestFile.name}`;
-                    console.log('Arquivo encontrado:', newestFile.name);
-                    res.json({
-                        success: true,
-                        downloadUrl: downloadPath,
-                        filename: newestFile.name
-                    });
-                } else {
-                    res.status(400).json({ error: 'Arquivo não encontrado após download' });
-                }
-            } catch (e) {
-                console.error('Erro ao buscar arquivo:', e.message);
-                res.status(500).json({ error: 'Erro ao processar arquivo' });
-            }
-        });
-
-    } catch (error) {
-        console.error('Erro:', error);
-        res.status(500).json({ error: 'Erro interno do servidor' });
-    }
+        } catch (e) {
+            console.error('[DOWNLOAD] Erro ao buscar arquivo:', e.message);
+            res.status(500).json({ error: e.message });
+        }
+    });
 });
 
-// Endpoint para servir downloads
+// Download file
 app.get('/download/:filename', (req, res) => {
     const filename = req.params.filename;
     const filepath = path.join(DOWNLOADS_DIR, filename);
 
-    // Segurança: verificar se o arquivo está dentro do diretório de downloads
     if (!filepath.startsWith(DOWNLOADS_DIR)) {
         return res.status(403).json({ error: 'Acesso negado' });
     }
@@ -199,24 +181,22 @@ app.get('/download/:filename', (req, res) => {
         return res.status(404).json({ error: 'Arquivo não encontrado' });
     }
 
-    console.log('Servindo download:', filename);
+    console.log('[DOWNLOAD] Servindo:', filename);
 
     res.download(filepath, (err) => {
         if (err) {
-            console.error('Erro ao enviar arquivo:', err);
+            console.error('[DOWNLOAD] Erro ao enviar:', err.message);
         } else {
-            // Deletar arquivo após 2 minutos
             setTimeout(() => {
                 if (fs.existsSync(filepath)) {
                     fs.unlinkSync(filepath);
-                    console.log(`Arquivo deletado: ${filename}`);
+                    console.log('[DOWNLOAD] Arquivo deletado:', filename);
                 }
             }, 2 * 60 * 1000);
         }
     });
 });
 
-// Função auxiliar para formatar duração
 function formatDuration(seconds) {
     if (!seconds) return 'Desconhecido';
     const hours = Math.floor(seconds / 3600);
@@ -232,8 +212,8 @@ function formatDuration(seconds) {
     }
 }
 
-// Iniciar servidor
 app.listen(PORT, () => {
     console.log(`🎬 YouTube Downloader rodando em http://localhost:${PORT}`);
-    console.log(`📁 Diretório de downloads: ${DOWNLOADS_DIR}`);
+    console.log(`📁 Diretório: ${DOWNLOADS_DIR}`);
+    console.log(`🔧 yt-dlp deve estar instalado no PATH`);
 });
