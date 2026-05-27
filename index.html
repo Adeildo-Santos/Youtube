@@ -8,31 +8,55 @@
     <style>
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body { font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh; display: flex; align-items: center; justify-content: center; padding: 20px; }
-        .container { width: 100%; max-width: 600px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
+        .container { width: 100%; max-width: 650px; background: white; border-radius: 16px; box-shadow: 0 20px 60px rgba(0,0,0,0.3); overflow: hidden; }
         .header { background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); color: white; padding: 40px 30px; text-align: center; }
         .header h1 { font-size: 28px; margin-bottom: 10px; }
         .content { padding: 40px 30px; }
-        .form-group { margin-bottom: 20px; }
-        label { display: block; margin-bottom: 8px; font-weight: 500; color: #333; }
-        input { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
-        input:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
-        .button-group { display: flex; gap: 10px; margin-top: 20px; }
+        .form-group { margin-bottom: 25px; }
+        label { display: block; margin-bottom: 10px; font-weight: 600; color: #333; font-size: 14px; }
+        input[type="url"] { width: 100%; padding: 12px; border: 2px solid #e0e0e0; border-radius: 8px; font-size: 14px; }
+        input[type="url"]:focus { outline: none; border-color: #667eea; box-shadow: 0 0 0 3px rgba(102,126,234,0.1); }
+        
+        .options-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 15px; }
+        .option-box { padding: 15px; border: 2px solid #e0e0e0; border-radius: 8px; cursor: pointer; transition: all 0.3s; }
+        .option-box input { display: none; }
+        .option-box:hover { border-color: #667eea; background: #f9f9f9; }
+        .option-box input:checked + label { color: #667eea; font-weight: 600; }
+        .option-box input:checked ~ .box-content { border-color: #667eea; background: rgba(102,126,234,0.05); }
+        .box-content { padding: 10px; border: 1px solid #e0e0e0; border-radius: 6px; text-align: center; }
+        
+        .quality-selector { display: none; }
+        .quality-selector.show { display: block; }
+        .quality-options { display: grid; grid-template-columns: 1fr 1fr 1fr; gap: 10px; margin-top: 10px; }
+        .quality-option { padding: 10px; border: 2px solid #e0e0e0; border-radius: 6px; cursor: pointer; text-align: center; font-size: 13px; transition: all 0.3s; }
+        .quality-option:hover { border-color: #667eea; }
+        .quality-option input { display: none; }
+        .quality-option input:checked ~ .quality-label { color: #667eea; font-weight: 600; }
+        
+        .button-group { display: flex; gap: 10px; margin-top: 25px; }
         button { padding: 12px 20px; border: none; border-radius: 8px; font-weight: 600; cursor: pointer; flex: 1; transition: all 0.3s; }
         .btn-primary { background: #667eea; color: white; }
-        .btn-primary:hover:not(:disabled) { background: #5568d3; }
+        .btn-primary:hover:not(:disabled) { background: #5568d3; transform: translateY(-2px); }
         .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; }
+        .btn-download { background: #4CAF50; color: white; font-size: 16px; }
+        .btn-download:hover { background: #45a049; }
+        
         .message { padding: 15px; border-radius: 8px; margin-bottom: 20px; display: none; }
         .message.show { display: block; }
         .message.success { background: #efe; color: #3c3; border-left: 4px solid #3c3; }
         .message.error { background: #fee; color: #c33; border-left: 4px solid #c33; }
+        
         .video-info { background: #f9f9f9; padding: 15px; border-radius: 8px; margin-bottom: 20px; border-left: 4px solid #667eea; display: none; }
         .video-info.show { display: block; }
+        .video-info-item { margin: 8px 0; font-size: 14px; }
+        
         .download-link { margin-top: 20px; padding: 20px; background: #f0f7ff; border-radius: 8px; border: 2px solid #667eea; display: none; }
         .download-link.show { display: block; }
-        .download-link a { display: inline-block; padding: 12px 20px; background: #4CAF50; color: white; text-decoration: none; border-radius: 6px; font-weight: 600; margin-top: 10px; }
-        .download-link a:hover { background: #45a049; }
+        .download-link .btn-download { display: block; width: 100%; }
+        
         .loading { display: inline-block; width: 14px; height: 14px; border: 2px solid rgba(0,0,0,0.1); border-radius: 50%; border-top-color: #667eea; animation: spin 0.8s infinite; }
         @keyframes spin { to { transform: rotate(360deg); } }
+        
         .footer { border-top: 1px solid #e0e0e0; padding: 15px 30px; background: #fafafa; font-size: 12px; color: #999; text-align: center; }
     </style>
 </head>
@@ -40,7 +64,7 @@
     <div class="container">
         <div class="header">
             <h1>🎬 YouTube Downloader</h1>
-            <p>Baixe vídeos do YouTube</p>
+            <p>Baixe vídeos do YouTube em alta qualidade</p>
         </div>
         <div class="content">
             <div class="message error" id="messageError"></div>
@@ -52,17 +76,51 @@
             </div>
 
             <div class="video-info" id="videoInfo">
-                <div><strong id="videoTitle">-</strong></div>
-                <div id="videoAuthor" style="font-size: 13px; color: #999; margin-top: 5px;">-</div>
+                <div class="video-info-item"><strong id="videoTitle">-</strong></div>
+                <div class="video-info-item" id="videoAuthor">👤 -</div>
+            </div>
+
+            <div class="form-group">
+                <label>Tipo de Mídia</label>
+                <div class="options-grid">
+                    <div class="option-box">
+                        <input type="radio" id="format-video" name="format" value="video" checked>
+                        <label for="format-video">📹 Vídeo (MP4)</label>
+                        <div class="box-content">Alta qualidade</div>
+                    </div>
+                    <div class="option-box">
+                        <input type="radio" id="format-audio" name="format" value="audio">
+                        <label for="format-audio">🎵 Áudio (MP3)</label>
+                        <div class="box-content">Só o som</div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="form-group quality-selector" id="qualityGroup">
+                <label>Qualidade do Vídeo</label>
+                <div class="quality-options">
+                    <div class="quality-option">
+                        <input type="radio" id="quality-best" name="quality" value="best" checked>
+                        <div class="quality-label">🌟 Melhor</div>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" id="quality-720" name="quality" value="720">
+                        <div class="quality-label">🎥 720p HD</div>
+                    </div>
+                    <div class="quality-option">
+                        <input type="radio" id="quality-480" name="quality" value="480">
+                        <div class="quality-label">📺 480p SD</div>
+                    </div>
+                </div>
             </div>
 
             <div class="button-group">
                 <button id="downloadBtn" class="btn-primary">Baixar</button>
             </div>
 
-            <div class="download-link" id="downloadLink">
-                <p>✓ Link de download gerado!</p>
-                <a id="downloadLink" href="#" target="_blank">CLIQUE AQUI PARA BAIXAR</a>
+            <div class="download-link" id="downloadLinkDiv">
+                <p style="margin-bottom: 15px;">✓ Link de download gerado!</p>
+                <button class="btn-download" id="downloadBtn2">📥 CLIQUE AQUI PARA BAIXAR</button>
             </div>
         </div>
         <div class="footer">
@@ -74,11 +132,26 @@
         const SERVER = 'https://youtube-4vor.onrender.com';
         const urlInput = document.getElementById('urlInput');
         const downloadBtn = document.getElementById('downloadBtn');
+        const downloadBtn2 = document.getElementById('downloadBtn2');
         const videoInfo = document.getElementById('videoInfo');
-        const downloadLink = document.getElementById('downloadLink');
-        const downloadLinkDiv = document.getElementById('downloadLink').parentElement;
+        const downloadLinkDiv = document.getElementById('downloadLinkDiv');
         const messageError = document.getElementById('messageError');
         const messageSuccess = document.getElementById('messageSuccess');
+        const qualityGroup = document.getElementById('qualityGroup');
+        const formatInputs = document.querySelectorAll('input[name="format"]');
+
+        let currentDownloadUrl = null;
+
+        // Mostrar/esconder opções de qualidade
+        formatInputs.forEach(input => {
+            input.addEventListener('change', function() {
+                if (this.value === 'video') {
+                    qualityGroup.classList.add('show');
+                } else {
+                    qualityGroup.classList.remove('show');
+                }
+            });
+        });
 
         downloadBtn.addEventListener('click', async () => {
             const videoUrl = urlInput.value.trim();
@@ -95,6 +168,11 @@
             downloadLinkDiv.classList.remove('show');
 
             try {
+                const format = document.querySelector('input[name="format"]:checked').value;
+                const quality = document.querySelector('input[name="quality"]:checked').value;
+
+                console.log('[CLIENT] Enviando:', { url: videoUrl, format, quality });
+
                 // Obter informações
                 const infoRes = await fetch(`${SERVER}/api/video-info`, {
                     method: 'POST',
@@ -103,6 +181,7 @@
                 });
 
                 const infoData = await infoRes.json();
+                console.log('[CLIENT] Info recebida:', infoData);
 
                 if (infoData.success) {
                     document.getElementById('videoTitle').textContent = infoData.title;
@@ -114,19 +193,22 @@
                 const downloadRes = await fetch(`${SERVER}/api/download`, {
                     method: 'POST',
                     headers: { 'Content-Type': 'application/json' },
-                    body: JSON.stringify({ url: videoUrl })
+                    body: JSON.stringify({ url: videoUrl, format, quality })
                 });
 
                 const downloadData = await downloadRes.json();
+                console.log('[CLIENT] Download recebido:', downloadData);
 
                 if (downloadData.success && downloadData.downloadUrl) {
-                    document.getElementById('downloadLink').href = downloadData.downloadUrl;
+                    currentDownloadUrl = downloadData.downloadUrl;
+                    console.log('[CLIENT] URL de download setada:', currentDownloadUrl);
                     downloadLinkDiv.classList.add('show');
                     showSuccess('✓ Link de download gerado! Clique no botão abaixo.');
                 } else {
-                    showError('Erro ao obter link de download');
+                    showError('Erro ao obter link: ' + (downloadData.message || downloadData.error || 'Desconhecido'));
                 }
             } catch (error) {
+                console.error('[CLIENT] Erro:', error);
                 showError('Erro: ' + error.message);
             } finally {
                 downloadBtn.disabled = false;
@@ -134,16 +216,29 @@
             }
         });
 
+        downloadBtn2.addEventListener('click', () => {
+            console.log('[CLIENT] Iniciando download:', currentDownloadUrl);
+            if (currentDownloadUrl) {
+                window.open(currentDownloadUrl, '_blank');
+            } else {
+                showError('Link não disponível. Tente novamente.');
+            }
+        });
+
         function showError(msg) {
+            console.error('[CLIENT]', msg);
             messageError.textContent = msg;
             messageError.classList.add('show');
         }
 
         function showSuccess(msg) {
+            console.log('[CLIENT]', msg);
             messageSuccess.textContent = msg;
             messageSuccess.classList.add('show');
         }
 
+        // Inicializar estado de qualidade
+        qualityGroup.classList.add('show');
         urlInput.focus();
     </script>
 </body>
