@@ -1,1 +1,0 @@
-web: pip install yt-dlp && npm start
